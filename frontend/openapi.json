@@ -937,6 +937,80 @@
         "title": "BrokenTestItem",
         "type": "object"
       },
+      "CostlyFlakyTest": {
+        "properties": {
+          "branches": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Branches",
+            "type": "array"
+          },
+          "cost_minutes": {
+            "title": "Cost Minutes",
+            "type": "number"
+          },
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "red_runs": {
+            "title": "Red Runs",
+            "type": "integer"
+          },
+          "retries": {
+            "title": "Retries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cycle",
+          "key",
+          "name",
+          "cost_minutes",
+          "retries",
+          "red_runs",
+          "branches"
+        ],
+        "title": "CostlyFlakyTest",
+        "type": "object"
+      },
+      "CountedTest": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cycle",
+          "name",
+          "count",
+          "detail"
+        ],
+        "title": "CountedTest",
+        "type": "object"
+      },
       "CycleDetailResponse": {
         "properties": {
           "description": {
@@ -1479,6 +1553,46 @@
           "config_path"
         ],
         "title": "CycleListResponse",
+        "type": "object"
+      },
+      "CycleSize": {
+        "properties": {
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          },
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "prev_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Tests"
+          },
+          "removed": {
+            "title": "Removed",
+            "type": "integer"
+          },
+          "tests": {
+            "title": "Tests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cycle",
+          "tests",
+          "prev_tests",
+          "added",
+          "removed"
+        ],
+        "title": "CycleSize",
         "type": "object"
       },
       "CycleSummary": {
@@ -2303,6 +2417,11 @@
             "title": "Cycle",
             "type": "string"
           },
+          "key": {
+            "default": "",
+            "title": "Key",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -2321,7 +2440,8 @@
           "name",
           "since",
           "age_s",
-          "runs"
+          "runs",
+          "key"
         ],
         "title": "DeliveryOpenFailure",
         "type": "object"
@@ -3143,6 +3263,11 @@
       },
       "FlakyTestItem": {
         "properties": {
+          "cost_minutes": {
+            "default": 0.0,
+            "title": "Cost Minutes",
+            "type": "number"
+          },
           "failed": {
             "title": "Failed",
             "type": "integer"
@@ -3223,6 +3348,11 @@
             "title": "Reasons",
             "type": "array"
           },
+          "red_runs": {
+            "default": 0,
+            "title": "Red Runs",
+            "type": "integer"
+          },
           "retried": {
             "default": 0,
             "title": "Retried",
@@ -3248,6 +3378,8 @@
           "issue_url",
           "reasons",
           "retried",
+          "red_runs",
+          "cost_minutes",
           "quarantined",
           "quarantine_entry"
         ],
@@ -3494,6 +3626,92 @@
         "title": "HealthSignalItem",
         "type": "object"
       },
+      "HygieneResponse": {
+        "description": "Suite size, added and removed tests, always-skipped and slow never-failing tests.\n\nSee ``services/suite_hygiene.py``.",
+        "properties": {
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          },
+          "added_tests": {
+            "items": {
+              "$ref": "#/components/schemas/NamedCycleTest"
+            },
+            "title": "Added Tests",
+            "type": "array"
+          },
+          "always_skipped": {
+            "items": {
+              "$ref": "#/components/schemas/NamedCycleTest"
+            },
+            "title": "Always Skipped",
+            "type": "array"
+          },
+          "always_skipped_count": {
+            "title": "Always Skipped Count",
+            "type": "integer"
+          },
+          "cycles": {
+            "items": {
+              "$ref": "#/components/schemas/CycleSize"
+            },
+            "title": "Cycles",
+            "type": "array"
+          },
+          "prev_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Tests"
+          },
+          "removed": {
+            "title": "Removed",
+            "type": "integer"
+          },
+          "removed_tests": {
+            "items": {
+              "$ref": "#/components/schemas/NamedCycleTest"
+            },
+            "title": "Removed Tests",
+            "type": "array"
+          },
+          "slow_never_failed": {
+            "items": {
+              "$ref": "#/components/schemas/NamedCycleTest"
+            },
+            "title": "Slow Never Failed",
+            "type": "array"
+          },
+          "slow_never_failed_ms": {
+            "title": "Slow Never Failed Ms",
+            "type": "integer"
+          },
+          "tests": {
+            "title": "Tests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tests",
+          "prev_tests",
+          "added",
+          "removed",
+          "cycles",
+          "added_tests",
+          "removed_tests",
+          "always_skipped",
+          "always_skipped_count",
+          "slow_never_failed",
+          "slow_never_failed_ms"
+        ],
+        "title": "HygieneResponse",
+        "type": "object"
+      },
       "IngestResponse": {
         "description": "A recorded upload (``POST /api/v1/ingest``, what ``testo ingest --server`` sends).",
         "properties": {
@@ -3715,6 +3933,9 @@
             "title": "Generated At",
             "type": "number"
           },
+          "hygiene": {
+            "$ref": "#/components/schemas/HygieneResponse"
+          },
           "kpis": {
             "$ref": "#/components/schemas/ReportKpis"
           },
@@ -3724,6 +3945,9 @@
             },
             "title": "Newly Flaky",
             "type": "array"
+          },
+          "patterns": {
+            "$ref": "#/components/schemas/PatternsResponse"
           },
           "period": {
             "enum": [
@@ -3741,6 +3965,9 @@
             },
             "title": "Scope",
             "type": "array"
+          },
+          "signal": {
+            "$ref": "#/components/schemas/SignalResponse"
           },
           "slower": {
             "items": {
@@ -3766,6 +3993,9 @@
             },
             "title": "Summary",
             "type": "array"
+          },
+          "teams": {
+            "$ref": "#/components/schemas/TeamsResponse"
           },
           "title": {
             "title": "Title",
@@ -3796,9 +4026,290 @@
           "fixed",
           "slower",
           "findings",
-          "delivery"
+          "delivery",
+          "signal",
+          "teams",
+          "hygiene",
+          "patterns"
         ],
         "title": "ManagerReportResponse",
+        "type": "object"
+      },
+      "NamedCycleTest": {
+        "properties": {
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cycle",
+          "name",
+          "detail"
+        ],
+        "title": "NamedCycleTest",
+        "type": "object"
+      },
+      "OwnerRow": {
+        "properties": {
+          "failing": {
+            "title": "Failing",
+            "type": "integer"
+          },
+          "fixes": {
+            "title": "Fixes",
+            "type": "integer"
+          },
+          "flaky": {
+            "title": "Flaky",
+            "type": "integer"
+          },
+          "flaky_minutes": {
+            "title": "Flaky Minutes",
+            "type": "number"
+          },
+          "median_fix_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Fix S"
+          },
+          "oldest_open_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest Open S"
+          },
+          "open_failures": {
+            "title": "Open Failures",
+            "type": "integer"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "tests": {
+            "title": "Tests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "owner",
+          "tests",
+          "failing",
+          "flaky",
+          "flaky_minutes",
+          "fixes",
+          "median_fix_s",
+          "open_failures",
+          "oldest_open_s"
+        ],
+        "title": "OwnerRow",
+        "type": "object"
+      },
+      "PatternDay": {
+        "properties": {
+          "coverage_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Pct"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "executed": {
+            "title": "Executed",
+            "type": "integer"
+          },
+          "retried": {
+            "title": "Retried",
+            "type": "integer"
+          },
+          "retry_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Pct"
+          }
+        },
+        "required": [
+          "day",
+          "retried",
+          "executed",
+          "retry_pct",
+          "coverage_pct"
+        ],
+        "title": "PatternDay",
+        "type": "object"
+      },
+      "PatternsResponse": {
+        "description": "Failure concentration, repeated errors, retry rate, unstable timing, when failures\nhappen, tests that catch bugs and coverage by day (``services/failure_patterns.py``).",
+        "properties": {
+          "by_environment": {
+            "items": {
+              "$ref": "#/components/schemas/RunSlice"
+            },
+            "title": "By Environment",
+            "type": "array"
+          },
+          "by_hour": {
+            "items": {
+              "$ref": "#/components/schemas/RunSlice"
+            },
+            "title": "By Hour",
+            "type": "array"
+          },
+          "by_weekday": {
+            "items": {
+              "$ref": "#/components/schemas/RunSlice"
+            },
+            "title": "By Weekday",
+            "type": "array"
+          },
+          "caught_bugs": {
+            "items": {
+              "$ref": "#/components/schemas/CountedTest"
+            },
+            "title": "Caught Bugs",
+            "type": "array"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/PatternDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "executed": {
+            "title": "Executed",
+            "type": "integer"
+          },
+          "failures": {
+            "title": "Failures",
+            "type": "integer"
+          },
+          "only_noise": {
+            "items": {
+              "$ref": "#/components/schemas/CountedTest"
+            },
+            "title": "Only Noise",
+            "type": "array"
+          },
+          "prev_retry_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Retry Pct"
+          },
+          "repeated_errors": {
+            "items": {
+              "$ref": "#/components/schemas/RepeatedError"
+            },
+            "title": "Repeated Errors",
+            "type": "array"
+          },
+          "retried": {
+            "title": "Retried",
+            "type": "integer"
+          },
+          "retry_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Pct"
+          },
+          "top_share_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Share Pct"
+          },
+          "top_tests": {
+            "items": {
+              "$ref": "#/components/schemas/CountedTest"
+            },
+            "title": "Top Tests",
+            "type": "array"
+          },
+          "unstable_timing": {
+            "items": {
+              "$ref": "#/components/schemas/CountedTest"
+            },
+            "title": "Unstable Timing",
+            "type": "array"
+          },
+          "when_findings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "When Findings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "failures",
+          "top_tests",
+          "top_share_pct",
+          "repeated_errors",
+          "retried",
+          "executed",
+          "retry_pct",
+          "prev_retry_pct",
+          "unstable_timing",
+          "by_hour",
+          "by_weekday",
+          "by_environment",
+          "when_findings",
+          "caught_bugs",
+          "only_noise",
+          "days"
+        ],
+        "title": "PatternsResponse",
         "type": "object"
       },
       "ProjectHealthResponse": {
@@ -4433,6 +4944,29 @@
           "items"
         ],
         "title": "ReleasesResponse",
+        "type": "object"
+      },
+      "RepeatedError": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "tests": {
+            "title": "Tests",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "message",
+          "count",
+          "tests"
+        ],
+        "title": "RepeatedError",
         "type": "object"
       },
       "ReportCycleRow": {
@@ -6169,6 +6703,176 @@
         "title": "RunReportsResponse",
         "type": "object"
       },
+      "RunSlice": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "red": {
+            "title": "Red",
+            "type": "integer"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "label",
+          "runs",
+          "red"
+        ],
+        "title": "RunSlice",
+        "type": "object"
+      },
+      "SignalCause": {
+        "properties": {
+          "cause": {
+            "enum": [
+              "product_bug",
+              "test_bug",
+              "environment",
+              "other",
+              "unmarked",
+              "flaky",
+              "no_tests"
+            ],
+            "title": "Cause",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "runs": {
+            "title": "Runs",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cause",
+          "label",
+          "runs"
+        ],
+        "title": "SignalCause",
+        "type": "object"
+      },
+      "SignalResponse": {
+        "description": "What the red runs were (real bugs vs noise) and what flaky tests cost.\n\nSee ``testo_core/services/failure_signal.py``.",
+        "properties": {
+          "by_cause": {
+            "items": {
+              "$ref": "#/components/schemas/SignalCause"
+            },
+            "title": "By Cause",
+            "type": "array"
+          },
+          "costly": {
+            "items": {
+              "$ref": "#/components/schemas/CostlyFlakyTest"
+            },
+            "title": "Costly",
+            "type": "array"
+          },
+          "flaky_branches": {
+            "title": "Flaky Branches",
+            "type": "integer"
+          },
+          "flaky_minutes": {
+            "title": "Flaky Minutes",
+            "type": "number"
+          },
+          "flaky_red_runs": {
+            "title": "Flaky Red Runs",
+            "type": "integer"
+          },
+          "noise_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Noise Pct"
+          },
+          "prev_flaky_minutes": {
+            "title": "Prev Flaky Minutes",
+            "type": "number"
+          },
+          "prev_noise_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Noise Pct"
+          },
+          "prev_real_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Real Pct"
+          },
+          "prev_red_runs": {
+            "title": "Prev Red Runs",
+            "type": "integer"
+          },
+          "real_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Real Pct"
+          },
+          "red_runs": {
+            "title": "Red Runs",
+            "type": "integer"
+          },
+          "unmarked_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unmarked Pct"
+          }
+        },
+        "required": [
+          "red_runs",
+          "prev_red_runs",
+          "by_cause",
+          "real_pct",
+          "noise_pct",
+          "unmarked_pct",
+          "prev_real_pct",
+          "prev_noise_pct",
+          "flaky_minutes",
+          "prev_flaky_minutes",
+          "flaky_red_runs",
+          "flaky_branches",
+          "costly"
+        ],
+        "title": "SignalResponse",
+        "type": "object"
+      },
       "SkillResultItem": {
         "properties": {
           "findings": {
@@ -6386,6 +7090,28 @@
           "workers"
         ],
         "title": "StageSummary",
+        "type": "object"
+      },
+      "TeamsResponse": {
+        "description": "Each owner's tests, failures, flaky tests and time to fix (``services/team_view.py``).",
+        "properties": {
+          "owners_known": {
+            "title": "Owners Known",
+            "type": "boolean"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OwnerRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "owners_known",
+          "rows"
+        ],
+        "title": "TeamsResponse",
         "type": "object"
       },
       "TestHistoryResponse": {
@@ -6648,6 +7374,17 @@
             "title": "Name",
             "type": "string"
           },
+          "p95_duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95 Duration Ms"
+          },
           "passed": {
             "title": "Passed",
             "type": "integer"
@@ -6698,6 +7435,7 @@
           "median_duration_ms",
           "slowdown_ms",
           "slowdown_pct",
+          "p95_duration_ms",
           "labels",
           "links"
         ],
