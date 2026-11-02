@@ -1435,6 +1435,34 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** CostlyFlakyTest */
+        CostlyFlakyTest: {
+            /** Branches */
+            branches: string[];
+            /** Cost Minutes */
+            cost_minutes: number;
+            /** Cycle */
+            cycle: string;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Red Runs */
+            red_runs: number;
+            /** Retries */
+            retries: number;
+        };
+        /** CountedTest */
+        CountedTest: {
+            /** Count */
+            count: number;
+            /** Cycle */
+            cycle: string;
+            /** Detail */
+            detail: string;
+            /** Name */
+            name: string;
+        };
         /** CycleDetailResponse */
         CycleDetailResponse: {
             /** Description */
@@ -1613,6 +1641,19 @@ export interface components {
             config_path: string | null;
             /** Items */
             items: components["schemas"]["CycleSummary"][];
+        };
+        /** CycleSize */
+        CycleSize: {
+            /** Added */
+            added: number;
+            /** Cycle */
+            cycle: string;
+            /** Prev Tests */
+            prev_tests: number | null;
+            /** Removed */
+            removed: number;
+            /** Tests */
+            tests: number;
         };
         /** CycleSummary */
         CycleSummary: {
@@ -1836,6 +1877,11 @@ export interface components {
             age_s: number;
             /** Cycle */
             cycle: string;
+            /**
+             * Key
+             * @default
+             */
+            key: string;
             /** Name */
             name: string;
             /** Runs */
@@ -2080,6 +2126,11 @@ export interface components {
         };
         /** FlakyTestItem */
         FlakyTestItem: {
+            /**
+             * Cost Minutes
+             * @default 0
+             */
+            cost_minutes: number;
             /** Failed */
             failed: number;
             /** Flip Rate */
@@ -2111,6 +2162,11 @@ export interface components {
             quarantined: boolean;
             /** Reasons */
             reasons: string[];
+            /**
+             * Red Runs
+             * @default 0
+             */
+            red_runs: number;
             /**
              * Retried
              * @default 0
@@ -2208,6 +2264,36 @@ export interface components {
             weight: number;
         };
         /**
+         * HygieneResponse
+         * @description Suite size, added and removed tests, always-skipped and slow never-failing tests.
+         *
+         *     See ``services/suite_hygiene.py``.
+         */
+        HygieneResponse: {
+            /** Added */
+            added: number;
+            /** Added Tests */
+            added_tests: components["schemas"]["NamedCycleTest"][];
+            /** Always Skipped */
+            always_skipped: components["schemas"]["NamedCycleTest"][];
+            /** Always Skipped Count */
+            always_skipped_count: number;
+            /** Cycles */
+            cycles: components["schemas"]["CycleSize"][];
+            /** Prev Tests */
+            prev_tests: number | null;
+            /** Removed */
+            removed: number;
+            /** Removed Tests */
+            removed_tests: components["schemas"]["NamedCycleTest"][];
+            /** Slow Never Failed */
+            slow_never_failed: components["schemas"]["NamedCycleTest"][];
+            /** Slow Never Failed Ms */
+            slow_never_failed_ms: number;
+            /** Tests */
+            tests: number;
+        };
+        /**
          * IngestResponse
          * @description A recorded upload (``POST /api/v1/ingest``, what ``testo ingest --server`` sends).
          */
@@ -2293,9 +2379,11 @@ export interface components {
             fixed: components["schemas"]["ReportTest"][];
             /** Generated At */
             generated_at: number;
+            hygiene: components["schemas"]["HygieneResponse"];
             kpis: components["schemas"]["ReportKpis"];
             /** Newly Flaky */
             newly_flaky: components["schemas"]["ReportTest"][];
+            patterns: components["schemas"]["PatternsResponse"];
             /**
              * Period
              * @enum {string}
@@ -2303,6 +2391,7 @@ export interface components {
             period: "day" | "week" | "month" | "quarter";
             /** Scope */
             scope: string[];
+            signal: components["schemas"]["SignalResponse"];
             /** Slower */
             slower: components["schemas"]["ReportTest"][];
             /** Start */
@@ -2311,10 +2400,93 @@ export interface components {
             still_failing: components["schemas"]["ReportTest"][];
             /** Summary */
             summary: string[];
+            teams: components["schemas"]["TeamsResponse"];
             /** Title */
             title: string;
             /** Trend */
             trend: components["schemas"]["ReportTrendPoint"][];
+        };
+        /** NamedCycleTest */
+        NamedCycleTest: {
+            /** Cycle */
+            cycle: string;
+            /** Detail */
+            detail: string;
+            /** Name */
+            name: string;
+        };
+        /** OwnerRow */
+        OwnerRow: {
+            /** Failing */
+            failing: number;
+            /** Fixes */
+            fixes: number;
+            /** Flaky */
+            flaky: number;
+            /** Flaky Minutes */
+            flaky_minutes: number;
+            /** Median Fix S */
+            median_fix_s: number | null;
+            /** Oldest Open S */
+            oldest_open_s: number | null;
+            /** Open Failures */
+            open_failures: number;
+            /** Owner */
+            owner: string;
+            /** Tests */
+            tests: number;
+        };
+        /** PatternDay */
+        PatternDay: {
+            /** Coverage Pct */
+            coverage_pct: number | null;
+            /** Day */
+            day: string;
+            /** Executed */
+            executed: number;
+            /** Retried */
+            retried: number;
+            /** Retry Pct */
+            retry_pct: number | null;
+        };
+        /**
+         * PatternsResponse
+         * @description Failure concentration, repeated errors, retry rate, unstable timing, when failures
+         *     happen, tests that catch bugs and coverage by day (``services/failure_patterns.py``).
+         */
+        PatternsResponse: {
+            /** By Environment */
+            by_environment: components["schemas"]["RunSlice"][];
+            /** By Hour */
+            by_hour: components["schemas"]["RunSlice"][];
+            /** By Weekday */
+            by_weekday: components["schemas"]["RunSlice"][];
+            /** Caught Bugs */
+            caught_bugs: components["schemas"]["CountedTest"][];
+            /** Days */
+            days: components["schemas"]["PatternDay"][];
+            /** Executed */
+            executed: number;
+            /** Failures */
+            failures: number;
+            /** Only Noise */
+            only_noise: components["schemas"]["CountedTest"][];
+            /** Prev Retry Pct */
+            prev_retry_pct: number | null;
+            /** Repeated Errors */
+            repeated_errors: components["schemas"]["RepeatedError"][];
+            /** Retried */
+            retried: number;
+            /** Retry Pct */
+            retry_pct: number | null;
+            /** Top Share Pct */
+            top_share_pct: number | null;
+            /** Top Tests */
+            top_tests: components["schemas"]["CountedTest"][];
+            /** Unstable Timing */
+            unstable_timing: components["schemas"]["CountedTest"][];
+            /** When Findings */
+            when_findings: string[];
         };
         /**
          * ProjectHealthResponse
@@ -2522,6 +2694,15 @@ export interface components {
         ReleasesResponse: {
             /** Items */
             items: components["schemas"]["ReleaseSummaryItem"][];
+        };
+        /** RepeatedError */
+        RepeatedError: {
+            /** Count */
+            count: number;
+            /** Message */
+            message: string;
+            /** Tests */
+            tests: number;
         };
         /** ReportCycleRow */
         ReportCycleRow: {
@@ -3140,6 +3321,61 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** RunSlice */
+        RunSlice: {
+            /** Label */
+            label: string;
+            /** Red */
+            red: number;
+            /** Runs */
+            runs: number;
+        };
+        /** SignalCause */
+        SignalCause: {
+            /**
+             * Cause
+             * @enum {string}
+             */
+            cause: "product_bug" | "test_bug" | "environment" | "other" | "unmarked" | "flaky" | "no_tests";
+            /** Label */
+            label: string;
+            /** Runs */
+            runs: number;
+        };
+        /**
+         * SignalResponse
+         * @description What the red runs were (real bugs vs noise) and what flaky tests cost.
+         *
+         *     See ``testo_core/services/failure_signal.py``.
+         */
+        SignalResponse: {
+            /** By Cause */
+            by_cause: components["schemas"]["SignalCause"][];
+            /** Costly */
+            costly: components["schemas"]["CostlyFlakyTest"][];
+            /** Flaky Branches */
+            flaky_branches: number;
+            /** Flaky Minutes */
+            flaky_minutes: number;
+            /** Flaky Red Runs */
+            flaky_red_runs: number;
+            /** Noise Pct */
+            noise_pct: number | null;
+            /** Prev Flaky Minutes */
+            prev_flaky_minutes: number;
+            /** Prev Noise Pct */
+            prev_noise_pct: number | null;
+            /** Prev Real Pct */
+            prev_real_pct: number | null;
+            /** Prev Red Runs */
+            prev_red_runs: number;
+            /** Real Pct */
+            real_pct: number | null;
+            /** Red Runs */
+            red_runs: number;
+            /** Unmarked Pct */
+            unmarked_pct: number | null;
+        };
         /** SkillResultItem */
         SkillResultItem: {
             /** Findings */
@@ -3190,6 +3426,16 @@ export interface components {
             timeout_s: number | null;
             /** Workers */
             workers: number | null;
+        };
+        /**
+         * TeamsResponse
+         * @description Each owner's tests, failures, flaky tests and time to fix (``services/team_view.py``).
+         */
+        TeamsResponse: {
+            /** Owners Known */
+            owners_known: boolean;
+            /** Rows */
+            rows: components["schemas"]["OwnerRow"][];
         };
         /** TestHistoryResponse */
         TestHistoryResponse: {
@@ -3282,6 +3528,8 @@ export interface components {
             median_duration_ms: number | null;
             /** Name */
             name: string;
+            /** P95 Duration Ms */
+            p95_duration_ms: number | null;
             /** Passed */
             passed: number;
             /** Runs */
