@@ -10,8 +10,10 @@ function plural(n: number, word: string): string {
 /** "Runs older than 30 days or beyond the newest 50 of a cycle are deleted automatically every 6 hours." */
 export function retentionLine(settings: RunSettings): string {
   const { days, runs_per_cycle: perCycle, enabled } = settings.retention;
-  if (!settings.config_found) return "No testosterone.yaml here, so no run is deleted automatically.";
-  if (!enabled) return "Runs are kept until you delete them: testosterone.yaml has no history.retention.";
+  if (!enabled && !settings.config_found) {
+    return "No testosterone.yaml or TESTO_RETENTION_DAYS here, so no run is deleted automatically.";
+  }
+  if (!enabled) return "Runs are kept until you delete them: no history.retention or TESTO_RETENTION_DAYS is set.";
   const limits = [
     days != null ? `older than ${plural(days, "day")}` : null,
     perCycle != null ? `beyond the newest ${perCycle} of a cycle` : null

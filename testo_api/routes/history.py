@@ -84,26 +84,35 @@ def delete_runs(body: DeleteRunsRequest) -> DeleteRunsResponse:
 def run_settings() -> RunSettingsResponse:
     """How long runs are kept (``history.retention``) and the default stage time limit.
 
-    Read from ``testosterone.yaml``; change them there. The server reads retention
-    when it starts, so restart it after an edit.
+    Read from ``testosterone.yaml``, with ``TESTO_RETENTION_DAYS`` /
+    ``TESTO_RETENTION_RUNS_PER_CYCLE`` on top (they also work without a file). The
+    server reads retention when it starts, so restart it after an edit.
     """
     from testo_core.config.errors import ConfigError
-    from testo_core.config.history_section import SERVER_PRUNE_INTERVAL_S
+    from testo_core.config.history_section import (
+        SERVER_PRUNE_INTERVAL_S,
+        HistoryConfig,
+        with_env_overrides,
+    )
 
+    cfg = None
     try:
         cfg = discover_and_load()
     except ConfigError:
-        return RunSettingsResponse(config_found=False, retention=RetentionSettings(enabled=False))
-    retention = cfg.history.retention
+        pass
+    try:
+        retention = with_env_overrides(cfg.history if cfg else HistoryConfig()).retention
+    except ConfigError:
+        retention = cfg.history.retention if cfg else HistoryConfig().retention
     return RunSettingsResponse(
-        config_found=True,
+        config_found=cfg is not None,
         retention=RetentionSettings(
             days=retention.days,
             runs_per_cycle=retention.runs_per_cycle,
             enabled=retention.enabled,
         ),
         cleanup_interval_hours=SERVER_PRUNE_INTERVAL_S / 3600 if retention.enabled else None,
-        default_stage_timeout_s=cfg.defaults.timeout_s,
+        default_stage_timeout_s=cfg.defaults.timeout_s if cfg else None,
     )
 
 
