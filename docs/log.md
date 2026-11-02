@@ -216,3 +216,7 @@ New ADR [Test Source in AI Summaries - 2026-11-01](Specs%20&%20ADRs/Test%20Sourc
 ## 2026-11-02: run deletion and stop
 
 New ADR [Run Deletion and Stop - 2026-11-02](Specs%20&%20ADRs/Run%20Deletion%20and%20Stop%20-%202026-11-02.md) (delete chosen runs, a Stop button with a stop scope per run, run settings on the Runs page), linked from the Specs README and the docs site menu.
+
+## 2026-11-02: lifecycle fixes
+
+New ADR [Lifecycle Fixes - 2026-11-02](Specs%20&%20ADRs/Lifecycle%20Fixes%20-%202026-11-02.md) (storage limits and visibility, unfinished runs, token rotation), linked from the Specs README, Team Server and the docs site menu. Team Server gains Storage and Rotating the token sections.
