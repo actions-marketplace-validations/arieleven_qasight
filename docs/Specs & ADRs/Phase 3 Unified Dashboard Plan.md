@@ -2,7 +2,7 @@
 type: spec
 status: current
 created: 2026-06-25
-updated: 2026-10-07
+updated: 2026-11-04
 ---
 
 # Phase 3 Unified Dashboard Plan
@@ -17,7 +17,7 @@ Consolidate scattered Allure and framework report links into one health-first ov
 
 | Layer | Detail |
 |-------|--------|
-| Aggregation | `testo_core/services/dashboard_service.py` |
+| Aggregation | `qasight/services/dashboard_service.py` |
 | API | `GET /api/v1/dashboard/overview` |
 | UI | `frontend/src/features/dashboard/DashboardPage.tsx` — primary `/` route |
 | Delta semantics | Reuses [Delta Comparison Policy](Delta%20Comparison%20Policy.md) classifications in rollups |
