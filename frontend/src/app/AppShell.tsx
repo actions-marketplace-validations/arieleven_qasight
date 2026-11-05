@@ -5,7 +5,6 @@ import { useIsFetching, useIsMutating, useQuery } from "@tanstack/react-query";
 import { apiClient } from "../lib/api-client";
 import { EYE_BRAND_BLUE, EyeLogo } from "../components/mascot";
 import { scoreTone } from "../features/health/score";
-import { BackgroundArt } from "../components/BackgroundArt";
 import { DemoBadge } from "../components/StaticBuildBanner";
 import { Icons } from "../components/ui";
 
@@ -95,11 +94,10 @@ export function AppShell() {
           Skip to content
         </a>
       </nav>
-      <BackgroundArt />
       <aside className="glass-panel print:hidden fixed inset-y-4 left-4 z-20 hidden w-64 flex-col overflow-y-auto px-4 py-6 lg:flex">
-        <Link to="/" className="flex items-center justify-center gap-2.5 pb-6" aria-label="Testo home">
+        <Link to="/" className="flex items-center justify-center gap-2.5 pb-6" aria-label="QASight home">
           <BrandEye />
-          <span className="text-sm font-bold uppercase tracking-[0.3em] text-white">Testo</span>
+          <span className="text-base font-bold tracking-wide text-white">QASight</span>
         </Link>
         <div className="mb-5 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" aria-hidden />
         <nav aria-label="Sections" className="flex flex-col gap-1 text-sm">
@@ -117,9 +115,9 @@ export function AppShell() {
 
       <header className="sticky top-0 z-30 print:hidden border-b border-white/5 bg-ink-950/80 backdrop-blur-xl lg:hidden">
         <div className="relative flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2" aria-label="Testo home">
+          <Link to="/" className="flex items-center gap-2" aria-label="QASight home">
             <BrandEye />
-            <span className="text-sm font-bold uppercase tracking-[0.2em] text-white">Testo</span>
+            <span className="text-base font-bold tracking-wide text-white">QASight</span>
           </Link>
           <div className="flex items-center gap-3">
             <DemoBadge />
