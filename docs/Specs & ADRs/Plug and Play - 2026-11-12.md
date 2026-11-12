@@ -30,6 +30,8 @@ All seven were approved, built in three waves, one pull request each: 1 and 2, t
 
 - **Any test command, no config** (`qasight run -- <command>`, `qasight/services/wrap_run.py`; reference: [Command Reference § Any test command, no config](../CLI%20Commands/Command%20Reference.md#any-test-command-no-config)). The command is recognised (directly, through `npx`/`uv run`/`python -m`, or through the npm, pnpm or yarn script it names), gets the flag that writes a result file into `.testo/wrap/<stamp>/`, runs with its own output and exit code, and the files are recorded through the same ingest path as `qasight ingest`. An unknown command is recorded from the result files it wrote while it ran, found by content.
 
+- **Setup from the GitHub website** (wave 2). A one-time workflow, `qasight-setup.yml` (`ci_templates.setup_workflow()`), runs the Action's new `setup` mode when it is committed: `qasight init --scan --yes --attach --no-run --ci github --pr` as github-actions[bot], so the scan, the attach and the pull request are the same code as on a laptop. Getting Started shows the file and a button that opens GitHub's new-file editor with it filled in (`/new/<branch>?filename=...&value=...`); the button reads the code block on the page, and a test keeps that block equal to the template. A pull request opened with Actions' token doesn't start other workflows and some repositories forbid it, so the docs say to push a commit to it, and `init --pr` prints the compare link when only the pull request is missing.
+
 The later waves add their decisions here as they land.
 
 ## Consequences
