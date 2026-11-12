@@ -73,6 +73,12 @@ class ToolResult:
     findings: tuple[Finding, ...] = ()
     # Findings per severity, over all of them (not only the kept ones).
     counts: dict[str, int] = field(default_factory=dict)
+    # Findings tools only: every finding and how to score a subset of them, so an
+    # ignore file (:mod:`qasight.services.scorecard.ignore`) can drop some and rescore.
+    all_findings: tuple[Finding, ...] = field(default=(), repr=False, compare=False)
+    rescore: Callable[[list[Finding]], ToolResult] | None = field(
+        default=None, repr=False, compare=False
+    )
 
 
 def _clamp(value: float) -> int:
@@ -119,6 +125,15 @@ def finding_points(findings: Iterable[Finding]) -> float:
     return sum(SEVERITY_POINTS[sev] * (1.0 + math.log2(n)) for (sev, _title), n in rules.items())
 
 
+def plural(n: int, what: str) -> str:
+    """``3 vulnerable dependencies``, ``1 issue``."""
+    if n == 1:
+        return f"{n} {what}"
+    if what.endswith("y") and what[-2:-1] not in "aeiou":
+        return f"{n} {what[:-1]}ies"
+    return f"{n} {what}s"
+
+
 def from_findings(
     findings: Iterable[Finding],
     *,
@@ -137,7 +152,7 @@ def from_findings(
         summary = clean
     else:
         parts = ", ".join(f"{n} {s}" for s, n in shown.items())
-        summary = f"{len(items)} {what}{'' if len(items) == 1 else 's'} ({parts})"
+        summary = f"{plural(len(items), what)} ({parts})"
     metrics: dict[str, float | int | str] = {"findings": len(items), **shown, **(extra or {})}
     return ToolResult(
         score=curve(points),
@@ -145,6 +160,8 @@ def from_findings(
         metrics=metrics,
         findings=tuple(items[:MAX_FINDINGS]),
         counts=counts,
+        all_findings=tuple(items),
+        rescore=lambda kept: from_findings(kept, what=what, clean=clean, extra=extra),
     )
 
 
@@ -347,20 +364,82 @@ def parse_npm_audit(path: Path) -> ToolResult:
 # --- Any language ----------------------------------------------------------------
 
 
+# Paths of tests, fixtures and mocks: the "secrets" there are sample data. A folder
+# named like one, or a file such as test_keys.py, keys.spec.ts or expressionTestData.json.
+_TEST_DIR = re.compile(
+    r"(^|/)(tests?|__tests__|spec|specs|fixtures?|__fixtures__|mocks?|__mocks__|testdata|test-data|test_data|testing)(/|$)",
+    re.IGNORECASE,
+)
+_TEST_FILE = re.compile(
+    r"(^|[._-])(tests?|specs?|fixtures?|mocks?)([._-]|$)|[a-z0-9](Test|Spec|Fixture|Mock)([A-Z0-9._-]|$)"
+)
+
+
+def is_test_path(path: str) -> bool:
+    """True for a file under a test, fixture or mock folder, or named like one."""
+    path = path.replace("\\", "/").lstrip("./")
+    folder, _, name = path.rpartition("/")
+    return bool(_TEST_DIR.search(folder + "/") or _TEST_FILE.search(name))
+
+
+# gitleaks rule ids -> severity. Keys that open a cloud account or sign anything are
+# critical; a "generic" match (any long random string next to the word key) is medium.
+_GITLEAKS_CRITICAL = ("private-key", "aws-", "gcp-", "azure-", "github-app", "github-pat")
+_GITLEAKS_MEDIUM = ("generic-", "jwt", "hashicorp-tf-password", "sidekiq-secret")
+
+
+def gitleaks_severity(rule: str) -> str:
+    rule = rule.lower()
+    if rule.startswith(_GITLEAKS_MEDIUM):
+        return "medium"
+    if rule.startswith(_GITLEAKS_CRITICAL) or rule.endswith("private-key"):
+        return "critical"
+    return "high"
+
+
 def parse_gitleaks(path: Path) -> ToolResult:
+    """gitleaks' JSON: each distinct secret once, test and fixture files left out."""
     data = _load_json(path)
     _expect(isinstance(data, list), "expected gitleaks' JSON report (--report-format json)")
-    findings = [
-        Finding(
-            "critical",
-            str(d.get("RuleID") or d.get("Description") or "secret"),
-            _short(d.get("Description")),
-            f"{d.get('File', '')}:{d.get('StartLine', '')}",
+    findings: list[Finding] = []
+    seen: set[tuple[str, str]] = set()
+    in_tests = 0
+    for d in data:
+        if not isinstance(d, dict):
+            continue
+        file = str(d.get("File") or "")
+        if is_test_path(file):
+            in_tests += 1
+            continue
+        rule = str(d.get("RuleID") or d.get("Description") or "secret")
+        secret = str(d.get("Secret") or "")
+        key = (
+            (rule, secret)
+            if secret and secret != "REDACTED"
+            else (rule, f"{file}:{d.get('StartLine', '')}")
         )
-        for d in data
-        if isinstance(d, dict)
-    ]
-    return from_findings(findings, what="leaked secret", clean="No secrets found")
+        if key in seen:
+            continue
+        seen.add(key)
+        findings.append(
+            Finding(
+                gitleaks_severity(rule),
+                rule,
+                _short(d.get("Description")),
+                f"{file}:{d.get('StartLine', '')}",
+            )
+        )
+    extra: dict[str, float | int | str] = {"in_test_files": in_tests} if in_tests else {}
+    result = from_findings(findings, what="leaked secret", clean="No secrets found", extra=extra)
+    if in_tests:
+        result = _with_note(result, f"{in_tests} in test or fixture files not counted")
+    return result
+
+
+def _with_note(result: ToolResult, note: str) -> ToolResult:
+    from dataclasses import replace
+
+    return replace(result, summary=f"{result.summary}; {note}")
 
 
 def parse_trivy(path: Path) -> ToolResult:

@@ -37,3 +37,24 @@ The same should work on any repository, not only the one QASight tests: a git UR
 - A scan on the server runs commands there, like a cycle does, so starting one needs the token or a `runner` account. Scans started from the UI are kept in memory until the server restarts; their results are in the database.
 - Tools that need an account or a network service (Semgrep's rule registry, OpenSSF Scorecard's GitHub token, ZAP's Docker image) only run where those are available.
 - Not done: running app tools against a server the scan starts itself, per-tool weights, and a scorecard on the Releases page.
+
+## Follow-up fixes from the first outside run
+
+On 2026-11-12 the scorecard ran on three outside repositories (griffithlab/civic-v2, cBioPortal/cbioportal, cBioPortal/cbioportal-frontend). It didn't crash, but the scores misled: CIViC's Security 98 came from Bandit on one example script, and cbioportal-frontend's 12,442 "secrets" were test data. A redesign around MegaLinter and OSV-Scanner (Taltal's choice, 2026-11-12) replaces the scorecard's own language and tool list, so the follow-up pull request keeps only the fixes that don't depend on which engine runs the tools:
+
+- **Coverage.** A scan stores which tools fit the repository and which ran (table `scorecard_coverage`, revision `0008`). The scorecard shows "N of M tools that fit this repository ran", and when fewer than half ran the grade is capped at C (the score itself is unchanged). The cap is in `report.capped_grade` and mirrored by the UI's `cappedGrade`.
+- **gitleaks.** Files under test, fixture and mock folders, or named like them (`expressionTestData.json`, `keys.spec.ts`), are left out and counted separately. Severity is per rule: private and cloud keys critical, provider tokens high, `generic-*` and JWTs medium. Each distinct secret counts once.
+- **Why a tool failed.** The error keeps the lines of the tool's output that say why, plus a hint (Semgrep's `p/default` needs semgrep.dev).
+- **History database.** The default stays `./testo_history.db` (changing it would move every user's run history), but `scan`, `import` and `show` now print the database they use.
+- **"Not run"** lists each tool once with its reason; the progress lines only say skipped or failed.
+- **Ignore file.** `scorecard-ignore.yml` at the repository root (or `--ignore FILE`) accepts known false positives for findings tools, which are then left out and the tool rescored:
+
+```yaml
+ignore:
+  - tool: zizmor
+    rule: dangerous-triggers                       # the finding's title: a rule id or package; globs work
+    path: .github/workflows/release-management.yml # the file in its location; globs work
+    reason: pull_request_target that checks nothing out
+```
+
+Each entry needs a `tool` and a `rule`, a `path` or both. Ratio tools (Lighthouse, coverage, ...) can't be ignored this way.
