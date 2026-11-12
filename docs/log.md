@@ -2,7 +2,7 @@
 type: log
 status: current
 created: 2026-10-07
-updated: 2026-11-11
+updated: 2026-11-12
 ---
 
 # Vault log
@@ -240,3 +240,7 @@ New ADR [UI Polish - 2026-11-08](Specs%20&%20ADRs/UI%20Polish%20-%202026-11-08.m
 ## 2026-11-11: added External Audit Tools
 
 New ADR [External Audit Tools - 2026-11-11](Specs%20&%20ADRs/External%20Audit%20Tools%20-%202026-11-11.md): what the third-party review tools found and the fixes. Linked from the Specs README and the docs site menu.
+
+## 2026-11-12: added Release Scorecard
+
+New ADR [Release Scorecard - 2026-11-12](Specs%20&%20ADRs/Release%20Scorecard%20-%202026-11-12.md): the `qasight scorecard` tools, scores, scans of any repository and the release gate. Linked from the Index, the Specs README and the docs site menu.
