@@ -79,6 +79,8 @@ class Tool:
     # File name of the report a scan writes.
     report_name: str = "report.json"
     command: Callable[[ScanContext], Command | None] | None = None
+    # Added to the error when the tool leaves no report (what usually went wrong).
+    failure_hint: str = ""
 
     def installed(self) -> bool:
         return self.binary is not None and shutil.which(self.binary) is not None
@@ -353,13 +355,15 @@ TOOLS: tuple[Tool, ...] = (
         install="pip install semgrep",
         report_name="report.sarif",
         command=_semgrep,
+        failure_hint="The p/default rules download from semgrep.dev, so Semgrep needs network.",
     ),
     Tool(
         id="gitleaks",
         name="gitleaks",
         category="security",
-        tagline="Passwords, keys and tokens committed in the files.",
-        how="Each leaked secret is critical: one secret takes the score to 80.",
+        tagline="Passwords, keys and tokens committed in the files (test and fixture files left out).",
+        how=_FINDINGS_HOW
+        + " Private and cloud keys are critical, provider tokens high, generic matches medium; each secret counts once.",
         homepage="https://gitleaks.io",
         kind="repo",
         report="gitleaks JSON (--report-format json)",

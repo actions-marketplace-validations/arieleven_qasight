@@ -24,6 +24,12 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from qasight.services.scorecard.ignore import (
+    IgnoreRule,
+    apply_ignores,
+    find_ignore_file,
+    load_ignores,
+)
 from qasight.services.scorecard.parsers import ReportError, ToolResult
 from qasight.services.scorecard.tools import TOOLS, TOOLS_BY_ID, ScanContext, Tool
 
@@ -36,6 +42,7 @@ _URL = re.compile(r"^(https?://|ssh://|git@)[^\s]+$")
 _SHORT_GITHUB = re.compile(r"^(github\.com|gitlab\.com)/[\w.-]+/[\w.-]+/?$")
 
 Event = dict[str, Any]
+NOT_INSTALLED = "not installed"
 
 
 class ScanError(ValueError):
@@ -62,6 +69,22 @@ class ScanOutcome:
     skipped: dict[str, str] = field(default_factory=dict)
     errors: dict[str, str] = field(default_factory=dict)
     seconds: dict[str, float] = field(default_factory=dict)
+    # Tools that fit the repository (its languages, switched on, an app URL when they need
+    # one): the ones planned plus the ones not installed here. The scorecard's coverage.
+    expected: list[str] = field(default_factory=list)
+    ignore_file: Path | None = None
+
+    def not_run(self) -> dict[str, str]:
+        """Every tool that gave no result and why, each once: skipped first, then failed."""
+        out = dict(self.skipped)
+        for tool_id, message in self.errors.items():
+            out[tool_id] = f"failed: {message}"
+        return out
+
+    def missing(self) -> dict[str, str]:
+        """The expected tools that gave no result, and why."""
+        reasons = self.not_run()
+        return {t: reasons.get(t, "no result") for t in self.expected if t not in self.results}
 
 
 def is_git_url(target: str) -> bool:
@@ -224,7 +247,7 @@ def plan_tools(
             skipped[tool.id] = f"no {'/'.join(sorted(tool.languages))} code found"
             continue
         if not tool.installed():
-            skipped[tool.id] = f"not installed ({tool.install})"
+            skipped[tool.id] = f"{NOT_INSTALLED} ({tool.install})"
             continue
         run.append(tool)
     return run, skipped
@@ -261,12 +284,24 @@ def run_tool(
         f"$ {' '.join(cmd.argv)}\nexit {proc.returncode}\n\n{proc.stderr}", encoding="utf-8"
     )
     if not ctx.out.is_file() or ctx.out.stat().st_size == 0:
-        tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-3:]
-        raise ReportError(
-            f"exited {proc.returncode} without a report"
-            + (f": {' '.join(tail)[:300]}" if tail else "")
-        )
+        raise ReportError(_failure(tool, proc.returncode, proc.stderr or proc.stdout or ""))
     return tool.parse(ctx.out)
+
+
+# Lines in a tool's output that say why it stopped.
+_REASON = re.compile(r"error|fail|could not|cannot|can't|unable|denied|not found|timed? ?out", re.I)
+
+
+def _failure(tool: Tool, code: int, output: str) -> str:
+    """Why a tool left no report: its exit code, the lines of its output that say why, and a hint."""
+    lines = [line.strip() for line in output.strip().splitlines() if line.strip()]
+    reasons = [line for line in lines if _REASON.search(line)][-3:] or lines[-3:]
+    message = f"exited {code} without a report"
+    if reasons:
+        message += f": {' | '.join(reasons)[:400]}"
+    if tool.failure_hint:
+        message += f". {tool.failure_hint}"
+    return message
 
 
 def run_scan(
@@ -280,15 +315,30 @@ def run_scan(
     openapi: str | None = None,
     timeout_s: int = DEFAULT_TOOL_TIMEOUT_S,
     on_event: Callable[[Event], None] | None = None,
+    ignore_file: Path | None = None,
+    record_coverage: Callable[[ScanOutcome], None] | None = None,
 ) -> ScanOutcome:
-    """Scan ``target`` with every tool that fits; ``record`` stores each result as it comes."""
+    """Scan ``target`` with every tool that fits; ``record`` stores each result as it comes.
+
+    Findings accepted in ``ignore_file`` (default: the repository's
+    ``scorecard-ignore.yml``) are left out before a result is recorded, and
+    ``record_coverage`` gets the outcome at the end, to keep which tools ran.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
+    ignore_path = ignore_file or find_ignore_file(target.repo)
+    ignores: list[IgnoreRule] = load_ignores(ignore_path) if ignore_path else []
     languages = detect_languages(target.repo)
     tools, skipped = plan_tools(
         languages=languages, enabled=enabled, only=only, url=url, openapi=openapi
     )
     outcome = ScanOutcome(
-        target=target, out_dir=out_dir, languages=languages, skipped=dict(skipped)
+        target=target,
+        out_dir=out_dir,
+        languages=languages,
+        skipped=dict(skipped),
+        expected=[t.id for t in tools]
+        + [t for t, why in skipped.items() if why.startswith(NOT_INSTALLED)],
+        ignore_file=ignore_path,
     )
     emit = on_event or (lambda _e: None)
     emit(
@@ -315,6 +365,8 @@ def run_scan(
             result = run_tool(tool, ctx, timeout_s=timeout_s)
         except LookupError as exc:
             outcome.skipped[tool.id] = str(exc)
+            # Nothing for it in this repository: it doesn't count against the coverage.
+            outcome.expected.remove(tool.id)
             emit({"type": "tool", "tool": tool.id, "status": "skipped", "message": str(exc)})
             continue
         except ReportError as exc:
@@ -323,6 +375,7 @@ def run_scan(
             continue
         finally:
             outcome.seconds[tool.id] = round(time.monotonic() - started, 1)
+        result = apply_ignores(tool.id, result, ignores)
         record(tool.id, result)
         outcome.results[tool.id] = result
         emit(
@@ -334,6 +387,8 @@ def run_scan(
                 "message": result.summary,
             }
         )
+    if record_coverage is not None:
+        record_coverage(outcome)
     return outcome
 
 
