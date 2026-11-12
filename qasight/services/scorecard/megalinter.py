@@ -219,8 +219,8 @@ def command(
     args, env = _proxy_args()
     env.update(
         {
-            "DEFAULT_WORKSPACE": "/tmp/lint",
-            "REPORT_OUTPUT_FOLDER": "/tmp/reports",
+            "DEFAULT_WORKSPACE": "/tmp/lint",  # inside the container  # nosec B108
+            "REPORT_OUTPUT_FOLDER": "/tmp/reports",  # inside the container  # nosec B108
             "VALIDATE_ALL_CODEBASE": "true",
             "APPLY_FIXES": "none",
             "SARIF_REPORTER": "true",
