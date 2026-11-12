@@ -24,11 +24,13 @@ import hashlib
 import json
 import math
 import re
-import xml.etree.ElementTree as ET  # noqa: S405 - parsed with no DTD or entities (_xml_root)
+import xml.etree.ElementTree as ET  # noqa: S405 - types only; parsing goes through defusedxml
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from defusedxml import ElementTree as SafeET
 
 # Points one finding costs, by severity.
 SEVERITY_POINTS: dict[str, float] = {
@@ -744,7 +746,7 @@ def _xml_root(path: Path) -> ET.Element:
         text = re.sub(r"<!DOCTYPE[^>\[]*(\[[^\]]*\])?\s*>", "", text, count=1)
         if "<!ENTITY" in text or "<!DOCTYPE" in text:
             raise ReportError(f"{path.name} declares XML entities, which are not allowed")
-    return ET.fromstring(text)  # noqa: S314 - no DTD or entities left (checked above)
+    return SafeET.fromstring(text)
 
 
 def parse_junit(path: Path) -> ToolResult:
