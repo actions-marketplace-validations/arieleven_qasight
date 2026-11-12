@@ -8,6 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+- Release scorecard: `qasight scorecard scan` runs the repo review tools (Bandit, Semgrep, gitleaks, Flawfinder, OWASP ZAP, pip-audit, npm audit, Trivy, OpenSSF Scorecard, zizmor, Ruff, Schemathesis, Lighthouse, axe, k6) on any folder or git URL (`qasight scorecard scan https://github.com/torvalds/linux`), scores each 0-100 for the project's version, rolls them up by category and compares the version with the one before. `qasight scorecard import` records a report you ran yourself (coverage, mutmut or Stryker, Locust, any SARIF or JUnit file), `qasight scorecard show --min-score/--min-tool/--no-drop` is the release gate and writes a Markdown summary, and `qasight scorecard tools` switches tools on and off. A new Scorecard page shows the score, the change since the last version, a bar per version, every tool with its logo (where the tool has one) and an on/off switch, and a form to scan a repository. `release-gate.yml` scores the last release and the commit. API under `/api/v1/scorecard`. See `docs/Specs & ADRs/Release Scorecard - 2026-11-12.md`
+
 ### Security
 - Uploaded and stage JUnit, TRX and Robot Framework XML is parsed with `defusedxml`: a file that declares entities is reported as unreadable instead of being expanded. `defusedxml` is a new dependency
 - GitHub Actions hardening: every third-party action is pinned to a commit SHA, checkouts no longer keep the job token unless the workflow pushes, the PyPI release build no longer restores the npm cache, and branch names reach shell scripts through `env:`. CI now runs zizmor on the workflows, and a weekly OpenSSF Scorecard workflow reports to code scanning (results are not published). See `docs/Specs & ADRs/External Audit Tools - 2026-11-11.md`
