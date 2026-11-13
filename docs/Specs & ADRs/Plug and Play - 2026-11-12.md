@@ -38,7 +38,7 @@ All seven were approved, built in three waves, one pull request each: 1 and 2, t
 
 - **The app the tests need, for Cypress** (a stage's `serve:`, `qasight/engine/stage_server.py`; reference: [QA Strategies § Defining work](../Testing%20Workflows/QA%20Strategies.md#defining-work-in-qasightyaml)). End-to-end tests need a running app, which is the step people otherwise script by hand in CI. `serve: {command, url, timeout_s}` starts the command in its own process group before the stage, waits until the URL answers and stops the group when the stage ends; an early exit or a URL that never answers fails the stage like a timeout. It lives in the engine, not in the Cypress adapter, so any stage can use it, and `qasight init` fills it for Cypress from `baseUrl` and the package's start/dev/preview/serve script.
 
-The later waves add their decisions here as they land.
+- **`npx qasight` for JavaScript projects** (`integrations/npm-qasight/`, released by hand with `publish-npm-qasight.yml`; reference: [Getting Started](../Getting%20Started.md)). A JavaScript team shouldn't need to set up Python first. The npm package is a small launcher, not a port: it runs the PyPI package through `uv`, which fetches Python and QASight into its cache (and is installed there when missing), so there is still one CLI and one release. `QASIGHT_VERSION` pins a version, and `ui`, `serve` and `demo` add the `api` extra. It is published with npm trusted publishing (OIDC), so no npm token is stored.
 
 ## Consequences
 
