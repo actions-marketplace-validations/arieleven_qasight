@@ -36,6 +36,8 @@ All seven were approved, built in three waves, one pull request each: 1 and 2, t
 
 - **A cycle per monorepo package** (`qasight init --scan --per-package`, `project_setup.config_yaml(package_cycles=...)`; reference: [Command Reference § qasight init](../CLI%20Commands/Command%20Reference.md#qasight-init)). Each scanned folder becomes its own cycle with a selective `trigger` on `<folder>/**` against the default branch, and the workflow runs `--cycle all` with full history, so a branch runs only the packages it changed and each one gets its own comment. It reuses the existing trigger code instead of a new "affected packages" mechanism; the top folder always runs, and a single-folder repository still gets one cycle.
 
+- **The app the tests need, for Cypress** (a stage's `serve:`, `qasight/engine/stage_server.py`; reference: [QA Strategies § Defining work](../Testing%20Workflows/QA%20Strategies.md#defining-work-in-qasightyaml)). End-to-end tests need a running app, which is the step people otherwise script by hand in CI. `serve: {command, url, timeout_s}` starts the command in its own process group before the stage, waits until the URL answers and stops the group when the stage ends; an early exit or a URL that never answers fails the stage like a timeout. It lives in the engine, not in the Cypress adapter, so any stage can use it, and `qasight init` fills it for Cypress from `baseUrl` and the package's start/dev/preview/serve script.
+
 The later waves add their decisions here as they land.
 
 ## Consequences
