@@ -34,6 +34,8 @@ All seven were approved, built in three waves, one pull request each: 1 and 2, t
 
 - **History from day one** (`qasight ingest --from-github`, `qasight/services/github_backfill.py`; reference: [Command Reference § qasight ingest](../CLI%20Commands/Command%20Reference.md#qasight-ingest)). The GitHub CLI lists recent completed workflow runs and downloads their artifacts; result files are found by content, as `qasight ingest` with no arguments does, and each run is recorded through the same ingest path with the run's commit, branch and CI run id (set as the `GITHUB_*` variables the recorder already reads) and then dated when it ran on CI. A run already recorded (same CI run id) is skipped, so it can be run again safely. `gh` handles sign-in and GitHub Enterprise; workflows that upload no result artifacts get nothing, and the output points at `qasight init --attach`.
 
+- **A cycle per monorepo package** (`qasight init --scan --per-package`, `project_setup.config_yaml(package_cycles=...)`; reference: [Command Reference § qasight init](../CLI%20Commands/Command%20Reference.md#qasight-init)). Each scanned folder becomes its own cycle with a selective `trigger` on `<folder>/**` against the default branch, and the workflow runs `--cycle all` with full history, so a branch runs only the packages it changed and each one gets its own comment. It reuses the existing trigger code instead of a new "affected packages" mechanism; the top folder always runs, and a single-folder repository still gets one cycle.
+
 The later waves add their decisions here as they land.
 
 ## Consequences
