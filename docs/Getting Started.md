@@ -2,7 +2,7 @@
 type: guide
 status: current
 created: 2026-10-19
-updated: 2026-11-12
+updated: 2026-11-13
 ---
 
 # Getting Started
@@ -67,7 +67,7 @@ pip install qasight pytest
 qasight --version          # qasight 1.x.y
 ```
 
-Not a Python project? Run it without a virtualenv: `uvx --from qasight qasight init` (or `pipx run --spec qasight qasight init`). The UI needs the `api` extra: `uvx --from 'qasight[api]' qasight ui`.
+Not a Python project? `npx qasight init` runs it with no Python installed (the [npm package](https://github.com/arieleven/qasight/tree/main/integrations/npm-qasight) fetches it with uv). With uv or pipx: `uvx --from qasight qasight init` (or `pipx run --spec qasight qasight init`). The UI needs the `api` extra: `uvx --from 'qasight[api]' qasight ui` (`npx qasight ui` adds it itself).
 
 No config yet? `qasight run -- pytest -q` (or `-- npm test`, `-- go test ./...`) runs your usual command and records it; see [Command Reference § Any test command](CLI%20Commands/Command%20Reference.md#any-test-command-no-config).
 
